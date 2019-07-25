@@ -13,6 +13,10 @@ using HealthCheckExample.Configuration;
 using HealthCheckExample.Identity;
 using HealthCheckExample.Web.Resources;
 using Abp.AspNetCore.SignalR.Hubs;
+using HealthCheckExample.HealthChecks;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 
 namespace HealthCheckExample.Web.Startup
@@ -39,6 +43,10 @@ namespace HealthCheckExample.Web.Startup
             services.AddScoped<IWebResourceManager, WebResourceManager>();
 
             services.AddSignalR();
+
+            services.AddHealthCheckExampleHealthChecks();
+
+            services.AddHealthChecksUI();
 
             // Configure Abp and Dependency Injection
             return services.AddAbp<HealthCheckExampleWebMvcModule>(
@@ -72,6 +80,13 @@ namespace HealthCheckExample.Web.Startup
             {
                 routes.MapHub<AbpCommonHub>("/signalr");
             });
+
+            app.UseHealthChecks("/healthz", new HealthCheckOptions()
+            {
+                Predicate = _ => true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+            });
+            app.UseHealthChecksUI();
 
             app.UseMvc(routes =>
             {
